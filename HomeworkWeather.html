@@ -1,0 +1,198 @@
+
+
+<html>
+  <head>
+
+        <meta charset="UTF-8" /> 
+        <link href="HomeworkWeather.css" rel="stylesheet" type="text/css" />
+        <title></title> 
+  </head>
+
+    <div class = "body-orange">
+      <div class = "wrapper">
+        <div class = "container">
+            <div class="row">
+            <div class="col-sm-6">
+                        <h2 class="headline first-child text-color"><span class="border-color">Weather in your city</span></h2>
+                        </div>
+
+              <div class="col-sm-6">
+              <br> 
+                          <div class="form-inline text-center first-child">
+                            <div class="form-group">
+                              <label class="sr-only" for="help-search">Search</label>
+                              <input id="input" name="input" type="text" class="form-control border-color col-sm-12" onfocus="this.value = (this.value=='London, UK')? '' : this.value;" placeholder="Your city name" data-original-title="" title="">
+                            </div>
+                            <button type="submit" id = "Button" class="btn btn-orange"><i class="fa fa-question-circle"></i>? Search</button>
+                          </div>
+            </div>
+
+            <h3><div class = "cityText" id = "cityText"></div></h3>
+            <h5><img class = "Icon" id = "Icon"></img></h5>
+            <h2><div class = "temperatureText" id = "temperatureText"></div><h2>
+            <h5><div class = "getAtText" id = "getAtText"></div></h5>
+
+            <table class = "table" id = "tbl">
+              <tr>
+                <td width = "20%">Wind</td>
+                <td id = "lineWind">Информация</td>
+              </tr>
+
+              <tr>
+                <td>Cloudiness</td>
+                <td id = "lineCloudiness">Вторая ячейка</td>
+              </tr>
+
+              <tr>
+                <td>Pressure</td>
+                <td id = "linePressure">Вторая ячейка</td>
+              </tr>
+
+              <tr>
+                <td>Humidity</td>
+                <td id = "lineHumidity">Вторая ячейка</td>
+              </tr>
+
+              <tr>
+                <td>Rain</td>
+                <td id = "lineRain">Вторая ячейка</td>
+              </tr>
+
+              <tr>
+                <td>Sunrise</td>
+                <td id = "lineSunrise">Вторая ячейка</td>
+              </tr>
+
+              <tr>
+                <td>Sunset</td>
+                <td id = "lineSunset">Вторая ячейка</td>
+              </tr>
+
+              <tr>
+                <td>Geo coords</td>
+                <td id = "lineGeoCoords">Вторая ячейка</td>
+              </tr>
+          </table>
+
+
+
+          </div>
+        </div>
+      </div>
+
+      <script>
+
+
+      var oButton = document.querySelector("#Button");
+      oButton.addEventListener("click", buttonClick);
+
+      function buttonClick(oEvent) {
+
+          var Search = document.getElementsByTagName("input")[0].value;
+          getAsyncRequest("http://api.openweathermap.org/data/2.5/weather?q=" + Search + "&appid=8d4987c2756e904ddc1a960e6a38f93b", Search);
+      
+      }
+
+
+      var oTable = document.querySelector("#tbl");
+      var oTr = oTable.getElementsByTagName("tr");
+
+      function getAsyncRequest(requestURL, Search) {     
+
+          var req = new XMLHttpRequest();     
+          req.open("GET", requestURL, true); 
+
+              if(checkSearch(Search)) {
+
+                var valueLocalStorage =  localStorage.getItem(Search); 
+                var jsonParse = JSON.parse(valueLocalStorage);
+                createTable(jsonParse);
+
+              }
+              else {
+                req.addEventListener("load", function () {         
+                var parse = JSON.parse(req.responseText);
+                localStorage.setItem(Search, JSON.stringify(parse)); 
+                createTable(parse);
+                });
+
+              }
+             
+          req.send(null);  
+
+        }
+
+
+
+      function checkSearch(inputValue) {
+
+        for(var itam in localStorage)
+        {
+          if(itam == inputValue)
+            return true;
+        }  
+        return false;
+      }
+
+      function createTable (parse) {
+
+          var Wind = document.querySelector("#lineWind");
+          Wind.innerText = parse.wind.speed; 
+          var Cloudiness = document.querySelector("#lineCloudiness");
+          Cloudiness.innerText = parse.clouds.all + "%"; 
+          var Pressure = document.querySelector("#linePressure");
+          Pressure.innerText = parse.main.pressure + "hpa"; 
+          var Humidity = document.querySelector("#lineHumidity");
+          Humidity.innerText = parse.main.humidity + "%"; 
+          var Rain = document.querySelector("#lineRain");
+          Rain.innerText =  parse.rain == undefined ? "There is no rain" : parse.rain["1h"] ; 
+
+          var Sunrise = document.querySelector("#lineSunrise");
+          var date = new Date(0);
+          date.setUTCSeconds(parse.sys.sunrise);
+          var hours = date.getHours();
+          var minutes = date.getMinutes();
+          Sunrise.innerText = hours + ":" + minutes;
+          
+          var Sunset = document.querySelector("#lineSunset");
+          var date2 = new Date(0);
+          date2.setUTCSeconds(parse.sys.sunset);
+          var hours2 = date2.getHours();
+          var minutes2 = date2.getMinutes();
+          Sunset.innerText = hours2 + ":" + minutes2;
+
+          var geoCoords = document.querySelector("#lineGeoCoords");
+          geoCoords.innerText = "[ " + parse.coord.lat + " , " + parse.coord.lat + " ]"; 
+
+
+          var Search = document.getElementsByTagName("input")[0].value;
+          document.querySelector("#cityText").innerText = "City of " + Search + " , " + parse.sys.country;
+
+          
+          var icone = parse.weather[0].icon;
+          var parentEl = document.getElementById("Icon");
+          var img = "http://openweathermap.org/img/w/" + icone + ".png";
+          parentEl.setAttribute('src', img)
+
+
+          var cels = parseInt(parse.main.temp) - 273;
+          var temperature = cels.toString();
+          document.querySelector("#temperatureText").innerText = temperature + " 'C";
+        
+
+          var now = new Date();
+          var year = now.getUTCFullYear();
+          var day = now.getDate();
+          var month = now.getMonth();
+          var hour = now.getHours(); 
+          var minute = now.getMinutes();
+          document.querySelector("#getAtText").innerText = "get at " + year + "." + day + "." + month + "  " + hour + ":" + minute;
+
+
+
+      }
+
+
+      </script>
+
+</html>
